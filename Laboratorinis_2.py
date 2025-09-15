@@ -15,33 +15,6 @@ def friedman_ic(text):
     print(f"Friedman IC: {ic:.4f}")
     return round(estimated_length)
 
-# def kasiski_examination(text, min_len=3, max_len=5):
-#     text = text.replace(" ", "").lower()
-#     seq_spacings = []
-#     for seq_len in range(min_len, max_len + 1):
-#         seqs = {}
-#         for i in range(len(text) - seq_len):
-#             seq = text[i:i+seq_len]
-#             if seq in seqs:
-#                 seqs[seq].append(i)
-#             else:
-#                 seqs[seq] = [i]
-#         for seq, idxs in seqs.items():
-#             if len(idxs) > 1:
-#                 for j in range(len(idxs)-1):
-#                     spacing = idxs[j+1] - idxs[j]
-#                     seq_spacings.append(spacing)
-   
-#     from math import gcd
-#     from functools import reduce
-    
-#     if not seq_spacings:
-#         print("No repeated sequences found for Kasiski examination.")
-#         return None
-#     key_length = reduce(gcd, seq_spacings)
-#     # print(f"Kasiski spacings: {seq_spacings}")
-#     return key_length
-
 def kasiski_examination(text, min_len=3, max_len=5):
     text = ''.join(c for c in text.lower() if c.isalpha())
     seq_spacings = []
@@ -54,7 +27,7 @@ def kasiski_examination(text, min_len=3, max_len=5):
                 seq_positions[seq].append(i)
             else:
                 seq_positions[seq] = [i]
-        # collect spacings
+                
         for positions in seq_positions.values():
             if len(positions) > 1:
                 for j in range(len(positions) - 1):
@@ -135,6 +108,7 @@ def vigenere_cipher(text, password, lower, upper, type):
                 else:
                     new_index = (tIndex - pIndex) % len(lower)
                 encrypted_text += lower[new_index]
+                password_index += 1
             elif char in upper:
                 tIndex = upper.index(char)
                 pIndex = upper.index(key_char.upper())
@@ -143,9 +117,10 @@ def vigenere_cipher(text, password, lower, upper, type):
                 else:
                     new_index = (tIndex - pIndex) % len(upper)
                 encrypted_text += upper[new_index]
+                password_index += 1
             else:
                 encrypted_text += char
-            password_index += 1
+                
     return encrypted_text
 
 
@@ -167,7 +142,7 @@ def main():
                 password = line.strip()
                 print("Password:", password)
             else:    
-                text_inputs[counter] += line.strip()
+                text_inputs[counter] += line + '\n'
                 
     
 
@@ -194,7 +169,7 @@ def main():
     key = shifts_to_key(shifts, lower_alphabet)
     print("Step 4: Raktas iš poslinkių:", key)
     
-    print("Decrypted with found key:", vigenere_cipher(text_inputs[1].lower(), key, lower_alphabet, upper_alphabet, "decrypt"))
+    print("Decrypted with found key:", vigenere_cipher(text_inputs[1], key, lower_alphabet, upper_alphabet, "decrypt"))
                 
 if __name__ == "__main__":
     main()
