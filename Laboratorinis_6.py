@@ -1,4 +1,4 @@
-import secrets, math, sys
+import secrets, math
 from pagalbines_funkcijos import *
 
 # Miller-Rabin pirminio skaičiaus testas
