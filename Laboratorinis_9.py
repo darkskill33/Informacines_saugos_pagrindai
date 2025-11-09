@@ -118,8 +118,10 @@ def main():
     
     # Šifravimas
     name = "Alanas Pauša" 
+    new_key = "79e03cba853cf66edd40825c3efc3c9c506a755161540aaf187aae04218784b64b2cb196f5c3a60b36b7e28f7a7d816dccb912b589e89e3e78b9911082bad0ad"
     plaintext_blocks = string_to_blocks(name)
-    encrypted_blocks = [aes_encrypt_block(b, round_keys) for b in plaintext_blocks]
+    round_keys2 = get_round_keys(new_key)
+    encrypted_blocks = [aes_encrypt_block(b, round_keys2) for b in plaintext_blocks]
     encrypted_text_hex = blocks_to_byte_string(encrypted_blocks)
 
     print(f"Užšifruotas vardas ir pavarde: {encrypted_text_hex}")
