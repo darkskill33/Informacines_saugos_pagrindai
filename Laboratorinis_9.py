@@ -97,35 +97,100 @@ def aes_decrypt_block(block, round_keys):
     state = add_round_key(state, round_keys[0])
     return state
 
+def decrypt_ecb(ciphertext_blocks, round_keys):
+    decrypted_blocks = []
+    for block in ciphertext_blocks:
+        decrypted_block = aes_decrypt_block(block, round_keys)
+        decrypted_blocks.append(decrypted_block)
+    return blocks_to_string(decrypted_blocks)
+
+
+def decrypt_cbc(ciphertext_blocks, round_keys, iv_block):
+    decrypted_blocks = []
+    previous_block = iv_block
+    for block in ciphertext_blocks:
+        decrypted_block = aes_decrypt_block(block, round_keys)
+        # XOR su ankstesniu šifro bloku arba IV
+        decrypted_block = [[decrypted_block[i][j] ^ previous_block[i][j] for j in range(4)] for i in range(4)]
+        decrypted_blocks.append(decrypted_block)
+        previous_block = block  # kitam ciklui
+    return blocks_to_string(decrypted_blocks)
+
+
+def decrypt_pcbc(ciphertext_blocks, round_keys, iv_block):
+    decrypted_blocks = []
+    previous_cipher = iv_block
+    previous_plain = [[0]*4 for _ in range(4)]
+    for block in ciphertext_blocks:
+        decrypted_block = aes_decrypt_block(block, round_keys)
+        # PCBC formulė: P_i = D(C_i) XOR C_{i-1} XOR P_{i-1}
+        decrypted_block = [[decrypted_block[i][j] ^ previous_cipher[i][j] ^ previous_plain[i][j] for j in range(4)] for i in range(4)]
+        decrypted_blocks.append(decrypted_block)
+        previous_plain = decrypted_block
+        previous_cipher = block
+    return blocks_to_string(decrypted_blocks)
+
+
+def decrypt_cfb(ciphertext_blocks, round_keys, iv_block):
+    decrypted_blocks = []
+    feedback_block = iv_block
+    for block in ciphertext_blocks:
+        encrypted_iv = aes_encrypt_block(feedback_block, round_keys)
+        decrypted_block = [[block[i][j] ^ encrypted_iv[i][j] for j in range(4)] for i in range(4)]
+        decrypted_blocks.append(decrypted_block)
+        feedback_block = block
+    return blocks_to_string(decrypted_blocks)
+
+
+def decrypt_ofb(ciphertext_blocks, round_keys, iv_block):
+    decrypted_blocks = []
+    output_block = iv_block
+    for block in ciphertext_blocks:
+        output_block = aes_encrypt_block(output_block, round_keys)
+        decrypted_block = [[block[i][j] ^ output_block[i][j] for j in range(4)] for i in range(4)]
+        decrypted_blocks.append(decrypted_block)
+    return blocks_to_string(decrypted_blocks)
+
 def main():
-    with open("variantai.txt", "r", encoding="utf-8") as f:
+    with open("4.txt", "r", encoding="utf-8") as f:
         for line in f:
             line = line.strip()
-            if line.startswith("4."):
-                key = next(f).strip()
-                text = next(f).strip()
+            if line.startswith("key"):
+                key = line.replace("key = ", "").strip()
+                iv = next(f).strip().replace("iv = ", "").strip()
+            elif line.startswith("1."):
+                aes_ECB = next(f).strip()
+            elif line.startswith("2."):
+                aes_CBC = next(f).strip()
+            elif line.startswith("3."):
+                aes_PCBC = next(f).strip()
+            elif line.startswith("4."):
+                aes_CFB = next(f).strip()
+            elif line.startswith("5."):
+                aes_OFB = next(f).strip()
 
     print("Key:", key)
-    print("Text:", text)
-
-    # Dešifravimas
-    round_keys = get_round_keys(key)
-    ciphertext_blocks = byte_string_to_blocks(text)
-    decrypted_blocks = [aes_decrypt_block(b, round_keys) for b in ciphertext_blocks]
-    decrypted_text = blocks_to_string(decrypted_blocks)
-
-    print(f"Atšifruotas tekstas: {decrypted_text}")
+    print("iv:", iv)
+    print("AES ECB:", aes_ECB)
+    print("AES CBC:", aes_CBC)
+    print("AES PCBC:", aes_PCBC)
+    print("AES CFB:", aes_CFB)
+    print("AES OFB:", aes_OFB)      
     
-    # Šifravimas
-    name = "Alanas Pauša" 
-    new_key = "79e03cba853cf66edd40825c3efc3c9c506a755161540aaf187aae04218784b64b2cb196f5c3a60b36b7e28f7a7d816dccb912b589e89e3e78b9911082bad0ad"
-    plaintext_blocks = string_to_blocks(name)
-    round_keys2 = get_round_keys(new_key)
-    encrypted_blocks = [aes_encrypt_block(b, round_keys2) for b in plaintext_blocks]
-    encrypted_text_hex = blocks_to_byte_string(encrypted_blocks)
-
-    print(f"Užšifruotas vardas ir pavarde: {encrypted_text_hex}")
-    print(f"Naudotas raktas: {key}")
+    ecb_blocks = byte_string_to_blocks(aes_ECB)
+    cbc_blocks = byte_string_to_blocks(aes_CBC)
+    pcbc_blocks = byte_string_to_blocks(aes_PCBC)
+    cfb_blocks = byte_string_to_blocks(aes_CFB)
+    ofb_blocks = byte_string_to_blocks(aes_OFB)
+    
+    iv_block = byte_string_to_blocks(iv)[0]
+    round_keys = get_round_keys(key)
+    # Dešifravimas
+    print("AES-ECB atviras tekstas:", decrypt_ecb(ecb_blocks, round_keys))
+    print("AES-CBC atviras tekstas:", decrypt_cbc(cbc_blocks, round_keys, iv_block))
+    print("AES-PCBC atviras tekstas:", decrypt_pcbc(pcbc_blocks, round_keys, iv_block))
+    print("AES-CFB atviras tekstas:", decrypt_cfb(cfb_blocks, round_keys, iv_block))
+    print("AES-OFB atviras tekstas:", decrypt_ofb(ofb_blocks, round_keys, iv_block))
 
 if __name__ == "__main__":
     main()
