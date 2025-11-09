@@ -97,7 +97,6 @@ def aes_decrypt_block(block, round_keys):
     state = add_round_key(state, round_keys[0])
     return state
 
-# --- Main ---
 def main():
     with open("variantai.txt", "r", encoding="utf-8") as f:
         for line in f:
